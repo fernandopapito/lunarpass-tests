@@ -1,14 +1,16 @@
 import { Page, Locator, expect } from '@playwright/test'
 
-import { Mission } from '../support/mission'
+import { Mission } from '../support/missions'
 
 export class RegisterPage {
     readonly page: Page
     readonly title: Locator
+    readonly alert: Locator
 
     constructor(page: Page) {
         this.page = page
         this.title = page.getByRole('heading', { name: 'Programar missão' })
+        this.alert = page.getByRole('alert')
     }
 
     async submit(mission: Mission) {
