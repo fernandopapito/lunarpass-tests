@@ -1,21 +1,12 @@
 import { Pool } from 'pg'
-import { Kysely, PostgresDialect } from 'kysely'
+import { Kysely, PostgresDialect, CamelCasePlugin } from 'kysely'
+
+import { Mission, Reservation, Ticket } from './types'
 
 interface Database {
-    missions: {
-        id: string,
-        rocket: string,
-        base_id: string,
-        departure_date: string,
-        return_date: string,
-        price: number
-    },
-    reservations: {
-        mission_id: string,
-    },
-    tickets: {
-        mission_id: string,
-    }
+    missions: Mission,
+    reservations: Reservation,
+    tickets: Ticket
 }
 
 const dialect = new PostgresDialect({
@@ -27,19 +18,25 @@ const dialect = new PostgresDialect({
 
 export const db = new Kysely<Database>({
     dialect,
+    plugins: [new CamelCasePlugin()]
 })
 
-export async function insertMission(id: string) {
+
+export async function cleanMission(mission: Mission) {
+    await deleteReservation(mission.id)
+    await deleteTicket(mission.id)
+    await deleteMission(mission.id)
+}
+
+export async function cleanAndInsertMission(mission: Mission) {
+    await cleanMission(mission)
+    await insertMission(mission)
+}
+
+export async function insertMission(mission: Mission) {
     await db
         .insertInto('missions')
-        .values({
-            id,
-            rocket: 'Starship',
-            base_id: 'aurora',
-            departure_date: '2028-01-20',
-            return_date: '2028-01-27',
-            price: 1000.00
-        })
+        .values(mission)
         .execute()
 }
 
@@ -53,13 +50,13 @@ export async function deleteMission(id: string) {
 export async function deleteReservation(missionId: string) {
     await db
         .deleteFrom('reservations')
-        .where('mission_id', '=', missionId)
+        .where('missionId', '=', missionId)
         .execute()
 }
 
 export async function deleteTicket(missionId: string) {
     await db
         .deleteFrom('tickets')
-        .where('mission_id', '=', missionId)
+        .where('missionId', '=', missionId)
         .execute()
 }

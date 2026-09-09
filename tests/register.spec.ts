@@ -8,9 +8,9 @@ import { RegisterPage } from '../pages/register.page'
 import { Navbar } from '../pages/components/navbar'
 import { Toast } from '../pages/components/toast'
 
-import { Mission } from '../support/missions'
+import { Mission } from '../support/types'
 
-import { deleteMission, deleteReservation, deleteTicket, insertMission } from '../support/db'
+import { cleanMission, cleanAndInsertMission } from '../support/db'
 
 let loginPage: LoginPage
 let dashPage: DashPage
@@ -35,13 +35,15 @@ test.beforeEach(async ({ page }) => {
 test('deve cadastrar uma nova missão', async ({ page }) => {
 
   const mission: Mission = {
-    id: 'LP-' + faker.string.alphanumeric({ length: { min: 5, max: 5 }, casing: 'upper' }),
+    id: 'LP-0128A',
     rocket: 'Starship',
-    lunarBase: 'aurora',
+    baseId: 'aurora',
     departureDate: '2028-01-20',
-    returnDate: '27 de jan. de 2028',
-    price: '1000'
+    returnDate: '2028-01-27',
+    price: 1000.00
   }
+
+  await cleanMission(mission)
 
   await dashPage.addButton.click()
   await expect(registerPage.title).toBeVisible()
@@ -55,10 +57,10 @@ test('não deve cadastrar com código de missão incorreto', async ({ page }) =>
   const mission: Mission = {
     id: faker.string.alphanumeric({ length: { min: 5, max: 5 }, casing: 'upper' }),
     rocket: 'Starship',
-    lunarBase: 'aurora',
+    baseId: 'aurora',
     departureDate: '2028-01-20',
-    returnDate: '27 de jan. de 2028',
-    price: '1000'
+    returnDate: '2028-01-27',
+    price: 1000.00
   }
 
   await dashPage.addButton.click()
@@ -73,16 +75,13 @@ test('não deve cadastrar com código duplicado', async ({ page }) => {
   const mission: Mission = {
     id: 'LP-3001A',
     rocket: 'Starship',
-    lunarBase: 'aurora',
-    departureDate: '2028-01-20',
-    returnDate: '27 de jan. de 2028',
-    price: '1000'
+    baseId: 'orion',
+    departureDate: '2030-01-20',
+    returnDate: '2030-01-27',
+    price: 500.00
   }
 
-  await deleteReservation(mission.id)
-  await deleteTicket(mission.id)
-  await deleteMission(mission.id)
-  await insertMission(mission.id)
+  await cleanAndInsertMission(mission)
 
   // Act
   await dashPage.addButton.click()
