@@ -1,14 +1,16 @@
 import { test, expect } from '@playwright/test'
+import { HomePage } from '../../pages/storefront/home.page'
 
 test('deve validar o titulo na aba do navegador', async ({ page }) => {
-  await page.goto('http://localhost:3000/')
+  const homePage = new HomePage(page)
+  await homePage.go()
 
   await expect(page).toHaveTitle(/Lunar Pass/)
 })
 
 test('deve ter exibir o slogan na homepage', async ({ page }) => {
-  await page.goto('http://localhost:3000/')
+  const homePage = new HomePage(page)
+  await homePage.go()
 
-  const slogan = page.getByRole('heading', {name: 'Sua viagem para a Lua começa aqui.'})
-  await expect(slogan).toBeVisible()
+  await expect(homePage.slogan).toBeVisible()
 })
