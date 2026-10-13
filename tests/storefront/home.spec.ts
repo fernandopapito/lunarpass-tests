@@ -1,16 +1,13 @@
-import { test, expect } from '@playwright/test'
-import { HomePage } from '../../pages/storefront/home.page'
+import { test, expect } from '../../support'
 
-test('deve validar o titulo na aba do navegador', async ({ page }) => {
-  const homePage = new HomePage(page)
-  await homePage.go()
+test('deve validar o titulo na aba do navegador', async ({ app }) => {
+  await app.store.homePage.go()
 
-  await expect(page).toHaveTitle(/Lunar Pass/)
+  await expect(app.store.homePage.page).toHaveTitle(/Lunar Pass/)
 })
 
-test('deve ter exibir o slogan na homepage', async ({ page }) => {
-  const homePage = new HomePage(page)
-  await homePage.go()
+test('deve ter exibir o slogan na homepage', async ({ app }) => {
+  await app.store.homePage.go()
 
-  await expect(homePage.slogan).toBeVisible()
+  await expect(app.store.homePage.slogan).toBeVisible()
 })
