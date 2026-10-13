@@ -21,6 +21,7 @@ export const db = new Kysely<Database>({
     plugins: [new CamelCasePlugin()]
 })
 
+// ---- missions ----
 
 export async function cleanMission(mission: Mission) {
     await deleteReservation(mission.id)
@@ -47,12 +48,16 @@ export async function deleteMission(id: string) {
         .execute()
 }
 
+// ---- reservations ----
+
 export async function deleteReservation(missionId: string) {
     await db
         .deleteFrom('reservations')
         .where('missionId', '=', missionId)
         .execute()
 }
+
+// ---- tickets ----
 
 export async function deleteTicket(missionId: string) {
     await db
