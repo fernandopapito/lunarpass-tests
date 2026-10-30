@@ -1,0 +1,1 @@
+Não temos código do projeto aqui, mas a estrutura (src) é apenas ilustrativa

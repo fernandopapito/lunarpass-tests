@@ -1,0 +1,44 @@
+{
+  "skill_name": "qa-test-automation",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Automatiza este cenário do Lunar Pass:\n\nContexto: Dado que estou autenticado no controle de missões\n\nCenário: Não deve cadastrar com código duplicado\nDado que já existe uma missão com um código válido\nQuando eu submeto o cadastro com o mesmo código\nEntão eu sou informado de que já existe uma missão com este ID",
+      "expected_output": "Lê docs/arquitetura.md e os arquivos reais de mission-control, reutiliza LoginPage/DashPage/RegisterPage via app.mission, prepara a missão com cleanAndInsertMission e ID exclusivo no formato LP-0000A, escreve o spec em playwright/e2e/mission-control importando de ../../support, roda com --project=mission-control e entrega o resumo.",
+      "assertions": [
+        "Lê docs/arquitetura.md e os Page Objects/specs de mission-control antes de escrever código",
+        "Não usa assets/projeto/ como fonte (essa pasta genérica não se aplica ao Lunar Pass)",
+        "O spec importa test e expect de ../../support e usa { app } sem new RegisterPage",
+        "A massa usa cleanAndInsertMission (ou cleanMission + insert) de playwright/support/db.ts",
+        "O ID da missão é exclusivo e no formato já usado no repositório",
+        "Há uma asserção para o Então, sem asserções extras inventadas",
+        "O teste foi executado com --project=mission-control e o resultado informado é o observado"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Automatiza o cenário 'Buscar missões filtrando por uma base específica' no storefront. (A aplicação em http://localhost:3000 não responde.)",
+      "expected_output": "Detecta que a aplicação está indisponível, não inventa locators da vitrine, não cria data-mission-code só porque docs/aderencia.md pede, escreve apenas o que for possível com HomePage existente ou pergunta, entrega como não executado e não declara que passou. Não altera baseURL nem o TODO do project storefront.",
+      "assertions": [
+        "Informa que a aplicação não respondeu em http://localhost:3000",
+        "Não inventa locators de telas que não conseguiu ver",
+        "Não usa atributos apenas solicitados em docs/aderencia.md",
+        "Não declara que o teste passou",
+        "O resumo marca o resultado como 'não executado' com o motivo",
+        "Não altera playwright.config.ts, credenciais ou connection string"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "O teste de cadastro com código duplicado ficou instável. Corrige.",
+      "expected_output": "Lê references/diagnostico-de-falhas.md, classifica a causa (locator, sync, dados, ambiente ou produto), verifica colisão de ID de missão e execução paralela, não introduz waitForTimeout nem retries no teste, não refatora Page Objects fora da causa, não muda retries do playwright.config.ts.",
+      "assertions": [
+        "Classifica a causa antes de alterar código",
+        "Considera ID de missão duplicado / unique constraint como causa de dados, não flake de UI, quando ocorrer em paralelo",
+        "Não usa waitForTimeout",
+        "Não altera asserção para o teste passar se a tela divergir do Então",
+        "Não altera connection string nem playwright.config.ts"
+      ]
+    }
+  ]
+}

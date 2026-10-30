@@ -10,13 +10,15 @@
 
 A arquitetura de testes do **LunarPass** foi projetada para suportar múltiplos módulos (`mission-control`, `storefront`) de forma isolada, garantindo manutenibilidade, confiabilidade, velocidade e baixo acoplamento entre a camada de negócio e os seletores visuais da interface.
 
+O repositório está organizado para coexistir, no futuro, com o código da aplicação: a automação vive exclusivamente em `playwright/` e a aplicação fica reservada em `src/`. A configuração mestre (`playwright.config.ts`) permanece na raiz e aponta apenas para os specs em `playwright/e2e/`.
+
 ### Pilares Arquiteturais
 
 1. **Fixtures First & Dependency Injection (DI):**  
    Eliminação de instanciações manuais de classes (`new LoginPage(page)`) diretamente nos testes. O runner do Playwright é estendido para injetar um fixture centralizado (`app`), agrupado por módulo (`app.mission`, `app.store`), fornecendo acesso tipado e sob demanda a todas as páginas e componentes.
 
 2. **Page Component Object Model (PCOM) Modular:**  
-   As páginas e componentes pertencem aos seus respectivos módulos (`pages/mission-control/`, `pages/storefront/`). Apenas componentes efetivamente compartilhados entre dois ou mais módulos residem em `pages/shared/` (como `Toast`).
+   As páginas e componentes pertencem aos seus respectivos módulos (`playwright/support/pages/mission-control/`, `playwright/support/pages/storefront/`). Apenas componentes efetivamente compartilhados entre dois ou mais módulos residem em `playwright/support/pages/shared/` (como `Toast`).
 
 3. **Data Management Híbrido (Database Direct Seeding):**  
    Controle de pré-condições e massa de dados diretamente no banco de dados via **Kysely**, aplicando operações atômicas de limpeza e inserção (`cleanMission`, `cleanAndInsertMission`). Isso reduz o tempo de preparação de cenários e evita testes lentos baseados em navegação desnecessária de UI.
@@ -31,60 +33,62 @@ A arquitetura de testes do **LunarPass** foi projetada para suportar múltiplos 
 
 ## 2. Estrutura de Diretórios do Projeto
 
-Organização do repositório baseada em separação modular de responsabilidades:
+Organização do repositório com a automação isolada da aplicação:
 
 ```plaintext
 lunarpass-tests/
-├── docs/                         # Documentações técnicas e guias do projeto
-│   ├── aderencia.md              # Análise de aderência de seletores e acessibilidade
-│   ├── arquitetura.md            # Este documento de arquitetura
-│   ├── storefront.md             # Regras de negócio e especificações funcionais
-│   └── prompts/                  # Prompts e instruções de automação
-├── pages/                        # Abstração de telas (Page Objects)
-│   ├── mission-control/          # Páginas e componentes exclusivos do Mission Control
-│   │   ├── dash.page.ts          # Painel de controle e listagem de missões
-│   │   ├── login.page.ts         # Formulário de autenticação
-│   │   ├── navbar.ts             # Barra de navegação do Mission Control
-│   │   └── register.page.ts      # Formulário de cadastro de missões
-│   ├── shared/                   # Componentes compartilhados entre múltiplos módulos
-│   │   └── toast.ts              # Feedback flutuante e notificações do sistema
-│   └── storefront/               # Páginas e componentes exclusivos do Storefront
-│       └── home.page.ts          # Vitrine pública e landing page
-├── support/                      # Utilitários, conexões de dados e fixtures
-│   ├── db.ts                     # Conexão com banco via Kysely e queries de apoio agrupadas
-│   ├── helpers.ts                # Funções utilitárias puras (datas, formatações)
-│   ├── index.ts                  # Extensão do runner do Playwright e fixture { app } agrupada
-│   └── types.ts                  # Tipagem e interfaces do modelo de domínio
-├── tests/                        # Especificações de teste (*.spec.ts) por módulo
-│   ├── mission-control/          # Testes do módulo Mission Control
-│   │   ├── login.spec.ts         # Validações de fluxos de autenticação
-│   │   └── register.spec.ts      # Validações de cadastro e integridade de missões
-│   └── storefront/               # Testes do módulo Storefront
-│       └── home.spec.ts          # Validações da vitrine pública de missões
-├── package.json                  # Dependências, scripts e metadados do projeto
-├── playwright.config.ts          # Configuração mestre com projects por módulo
-└── yarn.lock                     # Lockfile do gerenciador de pacotes
+├── docs/                                   # Documentações técnicas e guias do projeto
+│   ├── aderencia.md                        # Análise de aderência de seletores e acessibilidade
+│   ├── arquitetura.md                      # Este documento de arquitetura
+│   ├── storefront.md                       # Regras de negócio e especificações funcionais
+│   └── prompts/                            # Prompts e instruções de automação
+├── playwright/                             # Automação Playwright (única área de testes)
+│   ├── e2e/                                # Especificações de teste (*.spec.ts) por módulo
+│   │   ├── mission-control/                # Testes do módulo Mission Control
+│   │   │   ├── login.spec.ts               # Validações de fluxos de autenticação
+│   │   │   └── register.spec.ts            # Validações de cadastro e integridade de missões
+│   │   └── storefront/                     # Testes do módulo Storefront
+│   │       └── home.spec.ts                # Validações da vitrine pública de missões
+│   └── support/                            # Fixtures, dados, helpers e Page Objects
+│       ├── pages/                          # Abstração de telas (Page Objects)
+│       │   ├── mission-control/            # Páginas e componentes exclusivos do Mission Control
+│       │   │   ├── dash.page.ts            # Painel de controle e listagem de missões
+│       │   │   ├── login.page.ts           # Formulário de autenticação
+│       │   │   ├── navbar.ts               # Barra de navegação do Mission Control
+│       │   │   └── register.page.ts        # Formulário de cadastro de missões
+│       │   ├── shared/                     # Componentes compartilhados entre múltiplos módulos
+│       │   │   └── toast.ts                # Feedback flutuante e notificações do sistema
+│       │   └── storefront/                 # Páginas e componentes exclusivos do Storefront
+│       │       └── home.page.ts            # Vitrine pública e landing page
+│       ├── db.ts                           # Conexão com banco via Kysely e queries de apoio agrupadas
+│       ├── helpers.ts                      # Funções utilitárias puras (datas, formatações)
+│       ├── index.ts                        # Extensão do runner do Playwright e fixture { app } agrupada
+│       └── types.ts                        # Tipagem e interfaces do modelo de domínio
+├── src/                                    # Reservado para o código da aplicação (repositório compartilhado)
+├── package.json                            # Dependências, scripts e metadados do projeto
+├── playwright.config.ts                    # Configuração mestre com projects por módulo
+└── yarn.lock                               # Lockfile do gerenciador de pacotes
 ```
 
 ---
 
 ## 3. Detalhamento das Camadas
 
-### 3.1. Camada de Fixtures e Injeção de Dependências (`support/index.ts`)
+### 3.1. Camada de Fixtures e Injeção de Dependências (`playwright/support/index.ts`)
 
 A inicialização e o ciclo de vida dos Page Objects são gerenciados através da extensão do objeto `test` nativo do Playwright, com os objetos agrupados pelo módulo de negócio:
 
 ```typescript
 import { test as base, expect, Page } from '@playwright/test'
 
-import { LoginPage } from '../pages/mission-control/login.page'
-import { DashPage } from '../pages/mission-control/dash.page'
-import { RegisterPage } from '../pages/mission-control/register.page'
-import { Navbar } from '../pages/mission-control/navbar'
+import { LoginPage } from './pages/mission-control/login.page'
+import { DashPage } from './pages/mission-control/dash.page'
+import { RegisterPage } from './pages/mission-control/register.page'
+import { Navbar } from './pages/mission-control/navbar'
 
-import { HomePage } from '../pages/storefront/home.page'
+import { HomePage } from './pages/storefront/home.page'
 
-import { Toast } from '../pages/shared/toast'
+import { Toast } from './pages/shared/toast'
 
 const createApp = (page: Page) => ({
   mission: {
@@ -111,15 +115,16 @@ export { expect }
 ```
 
 **Benefícios:**
-- Os testes importam `test` e `expect` diretamente de `../../support`.
+- Os testes em `playwright/e2e/<modulo>/` importam `test` e `expect` de `../../support`.
 - O parâmetro `{ app }` disponibiliza namespaces limpos (`app.mission.*`, `app.store.*`, `app.toast`) com auto-complete no TypeScript.
 
 ---
 
-### 3.2. Camada de Abstração de Interface (PCOM) (`pages/`)
+### 3.2. Camada de Abstração de Interface (PCOM) (`playwright/support/pages/`)
 
-* **Páginas por Módulo:** Encapsulam as rotas pertencentes a cada módulo funcional (`pages/mission-control/` e `pages/storefront/`).
-* **Componentes Compartilhados:** Componentes residem em `pages/shared/` **apenas** quando mais de um módulo consome o elemento (ex.: `toast.ts`). Componentes específicos (ex.: `navbar.ts` do Mission Control) pertencem à pasta do seu próprio módulo.
+* **Páginas por Módulo:** Encapsulam as rotas pertencentes a cada módulo funcional (`playwright/support/pages/mission-control/` e `playwright/support/pages/storefront/`).
+* **Componentes Compartilhados:** Componentes residem em `playwright/support/pages/shared/` **apenas** quando mais de um módulo consome o elemento (ex.: `toast.ts`). Componentes específicos (ex.: `navbar.ts` do Mission Control) pertencem à pasta do seu próprio módulo.
+* **Imports internos:** Page Objects importam tipos e helpers de `playwright/support/` (ex.: `../../types`, `../../helpers`), nunca de pastas na raiz do repositório.
 
 #### Diretriz de Seletores (Selector Strategy)
 
@@ -131,7 +136,7 @@ export { expect }
 
 ---
 
-### 3.3. Camada de Suporte e Banco de Dados (`support/db.ts`)
+### 3.3. Camada de Suporte e Banco de Dados (`playwright/support/db.ts`)
 
 O acesso direto ao banco PostgreSQL é feito utilizando **Kysely** com **pg Pool**, com funções agrupadas tematicamente:
 - **`// ---- missions ----`**: Funções de ciclo de vida e CRUD de missões (`cleanMission`, `cleanAndInsertMission`, `insertMission`, `deleteMission`).
@@ -140,9 +145,9 @@ O acesso direto ao banco PostgreSQL é feito utilizando **Kysely** com **pg Pool
 
 ---
 
-### 3.4. Camada de Especificação de Testes (`tests/`)
+### 3.4. Camada de Especificação de Testes (`playwright/e2e/`)
 
-Os cenários são implementados seguindo a estrutura **Arrange-Act-Assert (AAA)** dentro das pastas dos seus módulos.
+Os cenários são implementados seguindo a estrutura **Arrange-Act-Assert (AAA)** dentro das pastas dos seus módulos em `playwright/e2e/<modulo>/`.
 
 > [!IMPORTANT]
 > **Nota de Isolamento de Dados:**
@@ -153,10 +158,11 @@ Os cenários são implementados seguindo a estrutura **Arrange-Act-Assert (AAA)*
 
 ## 4. Configuração de Execução e Projects (`playwright.config.ts`)
 
-A suíte organiza os módulos em `projects` independentes no Playwright:
+A suíte organiza os módulos em `projects` independentes no Playwright. O `testDir` raiz restringe a descoberta à pasta `playwright/e2e`, e cada project aponta para o subdiretório do módulo:
 
 ```typescript
 export default defineConfig({
+  testDir: './playwright/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -169,7 +175,7 @@ export default defineConfig({
   projects: [
     {
       name: 'mission-control',
-      testDir: './tests/mission-control',
+      testDir: './playwright/e2e/mission-control',
       use: {
         ...devices['Desktop Chrome'],
         baseURL: 'http://localhost:3000',
@@ -177,7 +183,7 @@ export default defineConfig({
     },
     {
       name: 'storefront',
-      testDir: './tests/storefront',
+      testDir: './playwright/e2e/storefront',
       use: {
         ...devices['Desktop Chrome'],
         baseURL: 'http://localhost:3000', // TODO: confirmar baseURL do storefront
@@ -214,11 +220,11 @@ export default defineConfig({
 Para criar um novo módulo no projeto (por exemplo, `checkout` ou `account`), siga o roteiro:
 
 1. **Criar a estrutura de páginas:**  
-   Crie a pasta `pages/<modulo>/` e implemente os Page Objects específicos da funcionalidade.  
-   *Regra de Componentes:* Um componente só deve ir para `pages/shared/` se for comprovadamente reutilizado por mais de um módulo; caso contrário, deve ficar dentro de `pages/<modulo>/`.
+   Crie a pasta `playwright/support/pages/<modulo>/` e implemente os Page Objects específicos da funcionalidade.  
+   *Regra de Componentes:* Um componente só deve ir para `playwright/support/pages/shared/` se for comprovadamente reutilizado por mais de um módulo; caso contrário, deve ficar dentro de `playwright/support/pages/<modulo>/`.
 
 2. **Registrar no App Fixture:**  
-   Em `support/index.ts`, importe os Page Objects criados e adicione um novo grupo no objeto `createApp`:
+   Em `playwright/support/index.ts`, importe os Page Objects criados e adicione um novo grupo no objeto `createApp`:
    ```typescript
    const createApp = (page: Page) => ({
      mission: { ... },
@@ -231,14 +237,14 @@ Para criar um novo módulo no projeto (por exemplo, `checkout` ou `account`), si
    ```
 
 3. **Criar a estrutura de testes:**  
-   Crie a pasta `tests/<modulo>/` e adicione seus arquivos de especificação `*.spec.ts`, importando `{ test, expect }` de `../../support` e consumindo `app.novoModulo.minhaPage`.
+   Crie a pasta `playwright/e2e/<modulo>/` e adicione seus arquivos de especificação `*.spec.ts`, importando `{ test, expect }` de `../../support` e consumindo `app.novoModulo.minhaPage`.
 
 4. **Configurar o Project no Playwright:**  
    Em `playwright.config.ts`, adicione a nova entrada em `projects`:
    ```typescript
    {
      name: 'novo-modulo',
-     testDir: './tests/novo-modulo',
+     testDir: './playwright/e2e/novo-modulo',
      use: {
        ...devices['Desktop Chrome'],
        baseURL: 'http://localhost:3000',
