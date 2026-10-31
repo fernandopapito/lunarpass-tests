@@ -12,3 +12,6 @@ Acesse `http://localhost:3000` e execute o cenário **"Buscar missões para toda
 # Automação com Playwright
 
 Automatize o cenário **"Buscar missões para todas as bases lunares disponíveis"**, documentado em `docs/storefront.md` para a funcionalidade de "Busca de Missoes".
+
+
+Automatize os cenários funcionalidade de "Passageiros", documentado em `docs/storefront.md`.

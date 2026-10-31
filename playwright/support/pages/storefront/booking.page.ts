@@ -6,6 +6,9 @@ export class BookingPage {
     readonly noSeatsMessage: Locator
     readonly totalPrice: Locator
     readonly passengersTitle: Locator
+    readonly fullNameInput: Locator
+    readonly passportInput: Locator
+    readonly paymentTitle: Locator
     readonly alert: Locator
 
     constructor(page: Page) {
@@ -14,6 +17,9 @@ export class BookingPage {
         this.noSeatsMessage = page.getByRole('paragraph').filter({ hasText: 'Nenhum assento escolhido' })
         this.totalPrice = page.getByTestId('summary-total-price')
         this.passengersTitle = page.getByRole('heading', { name: 'Cadastre os passageiros' })
+        this.fullNameInput = page.getByRole('textbox', { name: 'Nome completo' })
+        this.passportInput = page.getByRole('textbox', { name: 'Passaporte' })
+        this.paymentTitle = page.getByRole('heading', { name: 'Pagamento' })
         this.alert = page.getByRole('alert')
     }
 
@@ -37,5 +43,11 @@ export class BookingPage {
 
     async continue() {
         await this.continueButton.click()
+    }
+
+    async submitPassenger(fullName: string, passport: string) {
+        await this.fullNameInput.fill(fullName)
+        await this.passportInput.fill(passport)
+        await this.page.getByRole('button', { name: 'Ir para pagamento' }).click()
     }
 }
