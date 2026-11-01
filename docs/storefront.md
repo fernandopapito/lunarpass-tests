@@ -150,22 +150,17 @@ Permitir que viajantes busquem missões espaciais, escolham seus assentos na cab
 
 ### Cenário: Emissão de tickets com sucesso após pagamento aprovado
 
-*Regras de negócio:* o pagamento é simulado e os cartões de teste definem a aprovação.
-
 **Dado** que estou na etapa de pagamento com os dados dos passageiros preenchidos corretamente  
-**Quando** eu submeto um pagamento com um cartão de teste válido  
+**Quando** eu submeto um pagamento com um cartão de crédito válido
 **Então** minha reserva é confirmada com um código de seis caracteres  
-**E** é emitida uma passagem para cada passageiro associado aos assentos  
-**E** eu recebo a informação de que a cobrança foi apenas uma simulação
+**E** é emitida uma passagem para cada passageiro associado aos assentos
 
 ### Cenário: Manter dados na tela quando o pagamento é recusado
 
-*Regras de negócio:* o pagamento é simulado e os cartões de teste definem a aprovação. Cartões que não são de teste resultam em erro de dados.
-
 **Dado** que estou na etapa de pagamento com os dados dos passageiros preenchidos corretamente  
-**Quando** eu submeto o pagamento utilizando um cartão não pertencente aos de teste  
-**Então** o pagamento não é aprovado por dados incorretos  
-**E** eu permaneço na tela de pagamento com meus dados preservados para corrigir o erro
+**Quando** eu submeto o pagamento utilizando um cartão sem saldo ou incorreto
+**Então** o pagamento não é aprovado
+**E** eu permaneço na tela de pagamento com meus dados preservados para corrigir o problema
 
 ### Cenário: Bloqueio da reserva por concorrência de assentos no momento do processamento
 
