@@ -30,7 +30,7 @@ export class BookingPage {
     readonly cvvInput: Locator
     readonly reservationCode: Locator
     readonly reservationTickets: Locator
-    readonly simulationNotice: Locator
+    readonly paymentApprovedMessage: Locator
     readonly alert: Locator
 
     constructor(page: Page) {
@@ -49,10 +49,10 @@ export class BookingPage {
         this.cvvInput = page.getByRole('textbox', { name: 'CVV' })
         this.reservationCode = page.getByTestId('reservation-code')
         this.reservationTickets = page.getByTestId('reservation-ticket')
-        this.simulationNotice = page
+        this.paymentApprovedMessage = page
             .getByTestId('reservation-confirmation')
             .getByRole('paragraph')
-            .filter({ hasText: 'nenhuma cobrança foi feita' })
+            .filter({ hasText: 'Pagamento aprovado' })
         this.alert = page.getByRole('alert')
     }
 

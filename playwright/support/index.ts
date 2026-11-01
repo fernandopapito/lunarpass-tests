@@ -9,6 +9,8 @@ import { HomePage } from './pages/storefront/home.page'
 import { MissionsPage } from './pages/storefront/missions.page'
 import { BookingPage } from './pages/storefront/booking.page'
 
+import { StripeService } from './services/stripe.service'
+
 import { Toast } from './pages/shared/toast'
 
 const createApp = (page: Page) => ({
@@ -22,6 +24,9 @@ const createApp = (page: Page) => ({
     homePage: new HomePage(page),
     missionsPage: new MissionsPage(page),
     bookingPage: new BookingPage(page),
+  },
+  services: {
+    stripe: new StripeService(page),
   },
   toast: new Toast(page),
 })

@@ -38,3 +38,12 @@ export interface Ticket {
   fullName: string,
   document: string
 }
+
+export type CardBrand = 'Visa' | 'Mastercard' | 'American Express'
+
+export interface StripePaymentResponse {
+  status: 'approved' | 'declined' | 'incorrect_card_data',
+  message: string,
+  brand: CardBrand,
+  paymentId?: string
+}
