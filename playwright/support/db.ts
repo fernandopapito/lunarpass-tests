@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { Pool } from 'pg'
 import { Kysely, PostgresDialect, CamelCasePlugin } from 'kysely'
 

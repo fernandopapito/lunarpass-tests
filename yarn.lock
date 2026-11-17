@@ -81,6 +81,11 @@ ansi-to-html@^0.7.2:
   dependencies:
     entities "^2.2.0"
 
+dotenv@^18.0.10:
+  version "18.0.10"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-18.0.10.tgz#4171e67ba539a3d1513d7cbc51b8124e60714d28"
+  integrity sha512-89FAA1xchzK2mxVWdr5F/0rldwiueXs6zJM86rO66EzekR1iBdiXRthyG+m5GvkJaFH3C2LESzamTkgndmLT2A==
+
 entities@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/entities/-/entities-2.2.0.tgz#098dc90ebb83d8dffa089d55256b351d34c4da55"
