@@ -1,12 +1,9 @@
+import { existsSync } from 'node:fs';
 import { defineConfig, devices } from '@playwright/test';
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+if (existsSync('.env')) process.loadEnvFile();
+
+const baseURL = process.env.BASE_URL ?? 'http://localhost:3000';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -22,7 +19,12 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  reporter: [
+    ['list'],
+    ['html', { outputFolder: 'reports/html', open: 'never' }],
+    ['junit', { outputFile: 'reports/junit.xml' }],
+    ['@estruyf/github-actions-reporter', { title: 'Regressão Lunar Pass', useDetails: true, showError: true }],
+  ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
@@ -38,7 +40,7 @@ export default defineConfig({
       testDir: './playwright/e2e/mission-control',
       use: {
         ...devices['Desktop Chrome'],
-        baseURL: 'https://lunarpass-papito.vercel.app',
+        baseURL,
       },
     },
     {
@@ -46,7 +48,7 @@ export default defineConfig({
       testDir: './playwright/e2e/storefront',
       use: {
         ...devices['Desktop Chrome'],
-        baseURL: 'https://lunarpass-papito.vercel.app', // TODO: confirmar baseURL do storefront
+        baseURL,
       },
     },
   ],

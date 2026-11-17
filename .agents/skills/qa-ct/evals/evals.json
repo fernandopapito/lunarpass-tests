@@ -1,0 +1,102 @@
+{
+  "skill_name": "qa-ct",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "/qa-ct --audit (O baseURL está fixo com a URL da Vercel, o booking.page.ts navega para http://localhost:3000/booking/..., o db.ts tem a string postgresql:// com a senha, não há .env nem .env.example e o reporter é só 'html'.)",
+      "expected_output": "Lê o projeto, mostra a tabela da auditoria (A1 a A7) com o estado e o porquê de cada item, explica o porquê antes de cada diff, mostra os diffs com a string de conexão mascarada, avisa que a senha commitada está queimada e precisa ser trocada no Supabase, e pergunta quais ajustes aplicar. Não altera nenhum arquivo antes da resposta.",
+      "assertions": [
+        "Lê playwright.config.ts, os page objects e playwright/support/db.ts antes de propor",
+        "Mostra uma tabela com os itens A1 a A7, o estado e uma frase de porquê para cada um",
+        "Antes de cada diff, explica o problema que o ajuste resolve e o custo dele",
+        "Propõe baseURL com process.env.BASE_URL ?? 'http://localhost:3000' nos dois projects",
+        "Propõe trocar o goto com http://localhost:3000 pelo caminho relativo",
+        "Propõe ler DATABASE_URL no db.ts com falha cedo",
+        "Propõe o reporter @estruyf/github-actions-reporter com versão fixa e explica que ele marca os testes instáveis que o JUnit esconde",
+        "Mascara a string de conexão no diff e não repete a senha nem o host no chat",
+        "Avisa que a senha commitada precisa ser trocada no Supabase",
+        "Pede aprovação e não altera nenhum arquivo antes da resposta"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "sim, pode aplicar todos (resposta à proposta do /qa-ct --audit)",
+      "expected_output": "Aplica só os itens propostos, cria .env.example com os nomes e .env com BASE_URL e o texto COLE_AQUI_A_STRING_DO_SESSION_POOLER, acrescenta .env e reports/ ao .gitignore, roda npx playwright test --list e mostra quantos testes foram listados, não roda a suíte porque o DATABASE_URL ainda é o texto de exemplo, e indica /qa-ct --go como próximo passo.",
+      "assertions": [
+        "Altera só os arquivos mostrados na proposta",
+        "O .env.example tem só os nomes BASE_URL e DATABASE_URL, sem valores reais",
+        "O .env não recebe a string de conexão antiga",
+        ".env e reports/ entram no .gitignore",
+        "Roda npx playwright test --list e mostra o resultado",
+        "Não roda a suíte enquanto o DATABASE_URL do .env é o texto de exemplo",
+        "Não muda retries, workers nem timeout",
+        "Indica /qa-ct --go como próximo passo"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "/qa-ct --go (A auditoria já foi aplicada: baseURL vem de BASE_URL, db.ts lê DATABASE_URL, .env no .gitignore, reporters em reports/.)",
+      "expected_output": "Confirma os pré-requisitos, copia o modelo para .github/workflows/tests.yml com cron 0 10 * * * e os jobs validate, check-env e regression, sem subir o app no CI, lista BASE_URL como Variable e DATABASE_URL (Session pooler) como Secret sem pedir valores, entrega o resumo e explica a primeira execução por Run workflow.",
+      "assertions": [
+        "Confere os pré-requisitos A1, A2, A3 e A5 antes de escrever o workflow",
+        "O workflow fica em .github/workflows/tests.yml com os jobs validate, check-env e regression",
+        "O cron está em UTC: 0 10 * * * para 07:00 de Brasília",
+        "O workflow não tem webServer, container, services nem yarn start",
+        "O YAML só cita ${{ vars.BASE_URL }} e ${{ secrets.DATABASE_URL }}, sem nenhum valor",
+        "Explica que DATABASE_URL deve ser a string do Session pooler, por falta de IPv6 no GitHub Actions",
+        "O upload do artefato usa if: always()",
+        "Não acrescenta passo de resumo nem checks: write: o resumo vem do reporter do config",
+        "Não declara que o pipeline passou sem ter visto a execução"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "/qa-ct --go (O db.ts ainda tem a string postgresql:// com a senha e o baseURL está fixo.)",
+      "expected_output": "Detecta os pré-requisitos em falta, para antes de escrever o YAML, mostra a tabela e orienta rodar /qa-ct --audit antes, sem editar arquivos nem repetir a string de conexão.",
+      "assertions": [
+        "Para antes de criar .github/workflows/tests.yml",
+        "Orienta rodar /qa-ct --audit antes",
+        "Não edita playwright.config.ts nem db.ts no modo --go",
+        "Não repete a string de conexão, a senha nem o host no chat"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "/qa-ct O job regression falhou no GitHub Actions. O log termina com: Error: connect ENETUNREACH 2600:1f18:...:5432",
+      "expected_output": "Lê references/diagnostico.md, classifica como rede: o segredo usa a conexão direta do Supabase, que só funciona por IPv6, e o GitHub Actions não tem IPv6. Orienta trocar DATABASE_URL pela string do Session pooler e rodar de novo com Run workflow. Não mexe nos testes, em retries nem imprime o segredo.",
+      "assertions": [
+        "Identifica a conexão direta por IPv6 como causa",
+        "Orienta trocar o segredo DATABASE_URL pela string do Session pooler",
+        "Não sugere aumentar retries nem continue-on-error",
+        "Não sugere imprimir a variável no log",
+        "Indica rodar de novo pelo Run workflow depois da troca"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "/qa-ct --audit (Os itens A1 a A6 já estão OK. No use do config: trace: 'on', screenshot: 'only-on-failure', video: 'retain-on-failure', com o comentário do template 'Collect trace when retrying the failed test' acima do trace.)",
+      "expected_output": "Marca A7 como Falta só por causa do vídeo, propõe video: 'off' explicando que o trace já tem a tela de cada ação e que o vídeo grava todos os testes, troca o comentário do template, mantém trace: 'on' (cita retain-on-failure só como sugestão opcional) e pede aprovação.",
+      "assertions": [
+        "Marca A7 como Falta por causa do video, não do trace",
+        "Propõe video: 'off' e explica que o trace já mostra a tela de cada ação",
+        "Explica que com o vídeo ligado o Playwright grava todos os testes, mesmo os que passam",
+        "Não propõe diff para trace: 'on'; cita retain-on-failure só como sugestão opcional",
+        "Propõe trocar o comentário 'Collect trace when retrying the failed test'",
+        "Não muda retries, workers nem timeout",
+        "Pede aprovação antes de alterar o config"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "/qa-ct --go (A1, A2, A3 e A5 estão OK. O reporter é [['list'], ['html', { outputFolder: 'reports/html', open: 'never' }]], sem JUnit e sem @estruyf/github-actions-reporter.)",
+      "expected_output": "Cria o workflow com os padrões do curso explicando o porquê de cada um, tira reports/junit.xml do upload porque o config não gera JUnit, avisa que a página do job ficará sem resumo dos testes e indica o A6 do --audit, sem editar o config.",
+      "assertions": [
+        "O upload do artefato publica reports/html e test-results, sem reports/junit.xml",
+        "Avisa que, sem o reporter @estruyf/github-actions-reporter, a página do job fica sem resumo dos testes",
+        "Indica o A6 do /qa-ct --audit para trazer o JUnit e o resumo",
+        "Diz o porquê do cron 0 10 * * * (UTC) e da branch main",
+        "Não altera o playwright.config.ts nem o package.json no modo --go"
+      ]
+    }
+  ]
+}

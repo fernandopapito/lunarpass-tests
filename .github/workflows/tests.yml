@@ -1,0 +1,100 @@
+# Testes contínuos do Lunar Pass: .github/workflows/tests.yml no repositório da suíte.
+# Roda a suíte Playwright contra o sandbox na Vercel. Não bloqueia deploy; avisa por e-mail.
+# Ajuste só: o cron (UTC), a branch principal e os caminhos dos relatórios, se o
+# playwright.config.ts usar outros (sem reporter junit, tire a linha reports/junit.xml do upload).
+# O resumo dos testes na página do job vem do reporter @estruyf/github-actions-reporter,
+# configurado no playwright.config.ts (A6 do /qa-ct --audit), não de um passo deste arquivo. Valores ficam em Settings → Secrets and variables → Actions:
+#   BASE_URL      → Variable: URL do sandbox (https://<projeto>.vercel.app)
+#   DATABASE_URL  → Secret: string do Session pooler do Supabase (nunca a conexão direta)
+name: Testes contínuos
+
+on:
+  schedule:
+    - cron: '0 10 * * *'   # todo dia às 07:00 de Brasília (10:00 UTC)
+  workflow_dispatch:       # botão "Run workflow" para rodar sob demanda (ex.: depois de um deploy)
+  push:
+    branches: [main]       # só valida o código de teste; não roda a suíte
+  pull_request:            # idem
+
+concurrency:
+  group: tests-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    # Valida o código de teste: instala e lista os testes, pegando import quebrado sem navegador e sem segredos.
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      # --list não conecta no banco; o valor fictício só satisfaz a checagem do db.ts.
+      DATABASE_URL: postgresql://list-only@localhost:5432/none
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - name: Listar os testes
+        run: npx playwright test --list
+
+  check-env:
+    # Confere variáveis e o sandbox no ar antes de gastar minutos com a suíte.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      BASE_URL: ${{ vars.BASE_URL }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - name: Conferir variáveis (falha cedo, nunca imprime valores)
+        run: test -n "$BASE_URL" && test -n "$DATABASE_URL" || { echo "Cadastre BASE_URL (Variable) e DATABASE_URL (Secret) em Settings → Secrets and variables → Actions"; exit 1; }
+      - name: Recusar a conexão direta do Supabase (o GitHub Actions não tem IPv6)
+        run: |
+          case "$DATABASE_URL" in
+            *@db.*.supabase.co*) echo "DATABASE_URL usa a conexão direta. Use a string do Session pooler (Supabase → Connect → Session pooler)."; exit 1 ;;
+          esac
+      - name: Sandbox no ar
+        run: curl -fsS -o /dev/null --retry 3 --retry-delay 10 --max-time 30 "$BASE_URL"
+
+  regression:
+    # Regressão: a suíte inteira (mission-control e storefront) contra o sandbox, com evidência de toda falha.
+    needs: [check-env]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BASE_URL: ${{ vars.BASE_URL }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - name: Cache dos browsers do Playwright
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Instalar o Chromium (só sem cache)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Instalar dependências do sistema (browser veio do cache)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - name: Rodar a regressão (o reporter do GitHub escreve o resumo na página do job)
+        run: npx playwright test
+      - name: Publicar relatório, JUnit, traces e screenshots (sempre, mesmo com falha)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-regression-${{ github.run_number }}
+          path: |
+            reports/html
+            reports/junit.xml
+            test-results
+          retention-days: 30
