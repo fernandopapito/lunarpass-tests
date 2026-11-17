@@ -23,7 +23,7 @@ test('Compra de 1 assento sem desconto', async ({ app }) => {
 
   // Assert
   await expect(app.store.bookingPage.discount).toHaveText('Sem desconto')
-  await expect(app.store.bookingPage.totalPrice).toHaveText('USD 900.00')
+  await expect(app.store.bookingPage.totalPrice).toHaveText('USD 1,000.00')
 })
 
 test('Compra de 2 assentos com 5% de desconto', async ({ app }) => {
